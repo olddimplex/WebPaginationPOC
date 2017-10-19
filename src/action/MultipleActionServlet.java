@@ -23,7 +23,7 @@ import dao.DaoCallSupport;
 import dao.tz.TimezoneDao;
 
 /**
- * Servlet implementation class HomeActionServlet
+ * Servlet implementation class MultipleActionServlet
  */
 @WebServlet(ServletPath.MULTIPLE)
 public class MultipleActionServlet extends AServlet {

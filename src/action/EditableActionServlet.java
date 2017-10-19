@@ -24,7 +24,7 @@ import dao.tz.TimezoneDao;
 import domain.TimezoneInfo;
 
 /**
- * Servlet implementation class HomeActionServlet
+ * Servlet implementation class EditableActionServlet
  */
 @WebServlet(ServletPath.EDITABLE)
 public class EditableActionServlet extends AServlet {

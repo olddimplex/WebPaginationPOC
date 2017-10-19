@@ -5,6 +5,7 @@ public class ViewPath {
 	public static final String SINGLE = "/WEB-INF/single/single.jsp";
 	public static final String MULTIPLE = "/WEB-INF/multiple/multiple.jsp";
 	public static final String EDITABLE = "/WEB-INF/editable/editable.jsp";
+	public static final String AUTOCOMPLETE = "/WEB-INF/auto/autocomplete.jsp";
 	
 	public static final String FRAGMENT_NAVIGATION_MENU = "/WEB-INF/fragments/navigation-menu.jsp";
 	public static final String FRAGMENT_NAVIGATION_MENU_ITEM = "/WEB-INF/fragments/navigation-menu-item.jsp";

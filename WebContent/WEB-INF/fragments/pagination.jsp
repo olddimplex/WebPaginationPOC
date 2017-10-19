@@ -28,7 +28,7 @@
 	</li>
 </script>
 <script type="text/template" data-template="${cls}-end-button-item">
-	<li class="next'">
+	<li class="next">
 		<a href="?<c:out value="${cls}"/>={{page}}" aria-label="Next" class="addLoader">&raquo;</a>
 	</li>
 	<li class="end">

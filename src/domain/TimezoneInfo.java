@@ -2,6 +2,8 @@ package domain;
 
 import java.math.BigDecimal;
 
+import util.JsonUtil;
+
 public class TimezoneInfo {
 	
 	public static final TimezoneInfo EMPTY = new TimezoneInfo(null, null, null, null);
@@ -46,5 +48,13 @@ public class TimezoneInfo {
 	 */
 	public String getOffset() {
 		return offset;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return JsonUtil.toJsonNoHtmlEscaping(this);
 	}
 }

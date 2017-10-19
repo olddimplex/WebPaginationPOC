@@ -26,6 +26,8 @@ public abstract class AServlet extends HttpServlet {
 
 	/** For use with AJAX calls. Holds the URL of the current page as seen by the browser. */
 	public static final String LOCATION_PARAM_NAME = "location";
+	/** */
+	public static final String QUERY_PARAMETER_NAME = "query";
 
 	/** Default page number to render */
 	public static final String PAGE_NUMBER_DEFAULT = "1";
