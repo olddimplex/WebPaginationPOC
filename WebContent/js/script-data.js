@@ -324,7 +324,7 @@
         });
     }
 
-    function handlePaginationContext(paginationContext, className, totalPages, addEventHandler) {
+    function handlePaginationContext(paginationContext, className, totalPages, pageJustLoaded) {
 		// keep it global since we call this function on AJAX updates too
     	stateObj.totalPages[className] = totalPages;
 
@@ -343,7 +343,7 @@
             currentPage = Math.min(pageParamValue, totalPages);
         }
 
-        if(addEventHandler) {
+        if(pageJustLoaded) {
 	        // on click rebuild pagination
 	        paginationContext.on("click", "li.page,.prev,.next,.start,.end", function(event) {
 	
@@ -409,15 +409,17 @@
     		"templates": templates,
     		"dataHtml": []
     	}
-        
-        getNodesToUpdate(className).each(function(ndx, el) {
-        	historyObject["dataHtml"].push(el.innerHTML);
-        });
 
-        if(!isSecondary) {
-            var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(newParams);
-            // Change page number in url and push it to history
-            history.pushState(historyObject, null, newUrl);
+        if(pageJustLoaded) {
+	        getNodesToUpdate(className).each(function(ndx, el) {
+	        	historyObject["dataHtml"].push(el.innerHTML);
+	        });
+	
+	        if(!isSecondary) {
+	            var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(newParams);
+	            // Change page number in url and push it to history
+	            history.pushState(historyObject, null, newUrl);
+	        }
         }
         
         buildPagination(historyObject, paginationContext);
