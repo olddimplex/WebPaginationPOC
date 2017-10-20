@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
+import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -124,21 +125,11 @@ public class AutocompleteActionServlet extends AServlet {
 //				// errors
 //				this.includeErrorListAsJsonML(request, response);
 				response.getOutputStream().print(']');
-				@SuppressWarnings("unchecked")
-				final Map<String, Integer> totalDataPagesMap = (Map<String, Integer>) 
+				final Object totalDataPagesMap = 
 					request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
 				if(totalDataPagesMap != null) {
-					response.getOutputStream().print(",\"metadata\":{");
-					String delimiter = "";
-					for(final Entry<String,Integer> entry : totalDataPagesMap.entrySet()) {
-						response.getOutputStream().print(delimiter);
-						response.getOutputStream().print("\"");
-						response.getOutputStream().print(entry.getKey());
-						response.getOutputStream().print("\":");
-						response.getOutputStream().print(String.valueOf(entry.getValue()));
-						delimiter = ",";
-					}
-					response.getOutputStream().print("}");
+					response.getOutputStream().print(",\"meta\":");
+					response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
 				}
 				response.getOutputStream().print('}');
 			} catch (final Exception e) {

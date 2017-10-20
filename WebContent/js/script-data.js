@@ -31,7 +31,6 @@
         	params["location"] = window.location.toString(); // possibly redirect here to refresh page
         	getContent($.extend(params, e.currentTarget.dataset), function(data) {
         		onAjaxUpdate(data, className);
-//        		onCountryChange(context, params);
         	});
         });
 		// Possibly render parts of page on click
@@ -48,16 +47,16 @@
         		onAjaxUpdate(data, className);
         		// Maintain history
         		addPopstateListener();
+        		
         		// You can't restore form data in the general case 
         		// since there may be multiple forms on page,
         		// therefore not supported here
-                var stateObject = {
-            		"selectorClass": className,
-            		"data": data
-            	}
+            	var state = stateObj[className];
+            	state.totalPages = getTotalPages(data, className);
+            	state.data = getDataToRender(data);
+
                 var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(fieldData);
-                history.pushState(stateObject, null, newUrl);
-//        		onCountryChange(context, params);
+                history.pushState(stateObj, null, newUrl);
         	});
         });
 		// Possibly render parts of page on load/refresh
@@ -85,8 +84,10 @@
 	                    function(data) { // called on success
 	                    	process(getDataToRender(data)[0]);
 	                    },
-	                    undefined,
-	                    function() {
+	                    function(data) { // called on error
+	                    	console.log(data);
+	                    },
+	                    function() { // called always
 	                    	self.toggleClass("typeahead-loaging");
 	                    });	
             	},
@@ -126,12 +127,15 @@
 					init($(nodesToUpdate[i]));
 				}
 			}
-			$(".pagination." + className).empty();
 			var totalPages = getTotalPages(data, className);
-			if(!isNaN(totalPages) && totalPages > 1) {
-				$(".pagination." + className).each(function(ndx, paginationContext) {
-					handlePaginationContext($(paginationContext), className, totalPages, false);
-				});
+			if(!isNaN(totalPages)) {
+				if(totalPages > 1) {
+					$(".pagination." + className).each(function(ndx, paginationContext) {
+						handlePaginationContext($(paginationContext), className, totalPages, false);
+					});
+				} else {
+					$(".pagination." + className).empty();
+				}
 			}
 		}
 	}
@@ -324,9 +328,7 @@
         });
     }
 
-    function handlePaginationContext(paginationContext, className, totalPages, pageJustLoaded) {
-		// keep it global since we call this function on AJAX updates too
-    	stateObj.totalPages[className] = totalPages;
+    function handlePaginationContext(paginationContext, className, totalPages, addEventHandler) {
 
         var templates = {};
         ["start","active","regular","end"].forEach(function(templateName){
@@ -335,22 +337,21 @@
         	});
         });
         var currentPage = 1,
-            isSecondary = paginationContext.attr("data-secondary"),
-            newParams = getCommonParams();
+            isSecondary = paginationContext.attr("data-secondary");
 
-        var pageParamValue = parseInt(newParams[className]);
+        var pageParamValue = parseInt(getCommonParams()[className]);
         if (pageParamValue && !isNaN(pageParamValue) && pageParamValue > 0) {
             currentPage = Math.min(pageParamValue, totalPages);
         }
 
-        if(pageJustLoaded) {
+        if(addEventHandler) {
 	        // on click rebuild pagination
 	        paginationContext.on("click", "li.page,.prev,.next,.start,.end", function(event) {
 	
 	            // don't reload page on click
 	            event.preventDefault();
 	            
-	            var pagesAvailable = stateObj.totalPages[className];
+	            var pagesAvailable = stateObj[className].totalPages;
 	
 	            if($(this).is('li.page')){
 	                currentPage = parseInt($(this).text());
@@ -379,50 +380,31 @@
 		            }),
 		            function(data) { // AJAX update success callback
 	                	onAjaxUpdate(data, className);
-		                var historyObject = {
-		            		"totalPages": pagesAvailable,
-		            		"showRange": stateObj.showRange,
-		            		"page": currentPage,
-		            		"selectorClass": className,
-		            		"templates": templates,
-		            		"data": data
-		            	}
-		                var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(currentParams);
-		                // Change page number in url and push it to history
-		                history.pushState(historyObject, null, newUrl);
+	                	var state = stateObj[className];
+	                	state.page = currentPage;
+	                	state.data = data;
 		                $("." + className + ".pagination").each(function(ndx, el) {
-		                	buildPagination(historyObject, $(this));
+		                	buildPagination(state, $(el));
 		                });
+		                //Change page number in url and push it to history
+		                var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(currentParams);
+		                history.pushState(stateObj, null, newUrl);
 		            }
 	            );
 	        });
         }
 
         addPopstateListener();
-
-        // Init pagination links
-        var historyObject = {
-    		"totalPages": totalPages,
-    		"showRange": stateObj.showRange,
-    		"page": currentPage,
-    		"selectorClass": className,
-    		"templates": templates,
-    		"dataHtml": []
-    	}
-
-        if(pageJustLoaded) {
-	        getNodesToUpdate(className).each(function(ndx, el) {
-	        	historyObject["dataHtml"].push(el.innerHTML);
-	        });
-	
-	        if(!isSecondary) {
-	            var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(newParams);
-	            // Change page number in url and push it to history
-	            history.pushState(historyObject, null, newUrl);
-	        }
-        }
         
-        buildPagination(historyObject, paginationContext);
+		// maintain it globally since we call this function on AJAX updates too
+    	stateObj[className] = {
+    		"showRange": 3, 
+    		"page": currentPage,
+    		"totalPages": totalPages,
+    		"templates": templates
+    	};
+        
+        buildPagination(stateObj[className], paginationContext);
 
     }
 
@@ -436,33 +418,45 @@
     }
     
     function popstateListener(e) {
-    	var stateObject = e.state;
-    	if(stateObject && stateObject.selectorClass) {
-            $("." + stateObject.selectorClass + ".pagination").each(function(ndx, el) {
-            	buildPagination(stateObject, $(this));
+    	var popObject = e.state;
+    	$.each(popObject, function(className, state) {
+            $("." + className + ".pagination").each(function(ndx, el) {
+            	buildPagination(state, $(el));
             });
-            if(stateObject.data) {
-            	onAjaxUpdate(stateObject.data, stateObject.selectorClass);
+            if(state.data) {
+            	onAjaxUpdate(state.data, className);
             } else
-            if(stateObject.dataHtml) {
-            	getNodesToUpdate(stateObject.selectorClass).each(function(ndx, el) {
-            		$(el).html(stateObject.dataHtml[ndx]);
-            	});
+            if(state.dataHtml) {
+        		getNodesToUpdate(className).each(function(ndx, el) {
+        			$(el).html(state.dataHtml[ndx]);
+        		});
             }
-    	}
+    	});
     }
     
-    var stateObj = {"showRange": 3, "totalPages": {}};
+    var stateObj = {};
 
     $(document).ready(function($) {
     	$(".pagination").each(function(ndx, paginationContext) {
     		paginationContext.className.split(/\s+/).forEach(function(className) {
     			var totalPages = parseInt($("input[name='" + className + "-total-data-pages']").filter(":first").val(),10) || 1;
     			if(!isNaN(totalPages) && totalPages > 1) {
+    				// Note the following updates the global stateObj
     				handlePaginationContext($(paginationContext), className, totalPages, true);
     			}
     		});
     	});
+    	var paginationControlCount = 0; 
+    	$.each(stateObj, function(className, state) {
+    		paginationControlCount++;
+    		state["dataHtml"] = [];
+    		getNodesToUpdate(className).each(function(ndx, el) {
+    			state.dataHtml.push(el.innerHTML);
+    		});
+    	});
+    	if(paginationControlCount > 0) {
+	        history.replaceState(stateObj, null, window.location.toString());
+    	}
     	// Render arbitrary data on page
     	init($(this));
     });

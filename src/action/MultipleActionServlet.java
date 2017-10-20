@@ -3,6 +3,7 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
+import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -79,12 +81,13 @@ public class MultipleActionServlet extends AServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if (HttpUtil.acceptsJSON(request)) {
+			this.setTotalPagesMapAttribute(request);
 			this.respondWithJson(request, response);
 		} else {
 			try {
-				setDaoCallSupportAttributeForTimeZoneInfoOne(request);
-				setDaoCallSupportAttributeForTimeZoneInfoTwo(request);
-				setTotalPagesMapAttribute(request);
+				this.setDaoCallSupportAttributeForTimeZoneInfoOne(request);
+				this.setDaoCallSupportAttributeForTimeZoneInfoTwo(request);
+				this.setTotalPagesMapAttribute(request);
 			} catch (final Exception e) {
 				this.getLogger().error("Failed to populate", e);
 			} finally {
@@ -101,7 +104,7 @@ public class MultipleActionServlet extends AServlet {
 		if (fragmentClassName != null) {
 			try {
 				response.setContentType("application/json");
-				response.getOutputStream().print('[');
+				response.getOutputStream().print("{\"content\":[");
 				switch (fragmentClassName) {
 					case SELECTOR_CLASS_TIMEZONE_INFO_1:
 						setDaoCallSupportAttributeForTimeZoneInfoOne(request);
@@ -118,15 +121,20 @@ public class MultipleActionServlet extends AServlet {
 //				// errors
 //				this.includeErrorListAsJsonML(request, response);
 				response.getOutputStream().print(']');
+				final Object totalDataPagesMap = 
+					request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+				if(totalDataPagesMap != null) {
+					response.getOutputStream().print(",\"meta\":");
+					response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
+				}
+				response.getOutputStream().print('}');
 			} catch (final Exception e) {
 				LOGGER.error("Failed to process an AJAX request", e);
 			}
 		}
-		// data
 	}
 
-	public void setDaoCallSupportAttributeForTimeZoneInfoTwo(
-			HttpServletRequest request) {
+	public void setDaoCallSupportAttributeForTimeZoneInfoTwo(final HttpServletRequest request) {
 		final DAOParams tzInfoTwoCallParams = new DAOParams();
 		tzInfoTwoCallParams.addParameter(
 			TimezoneDao.PAGE_PARAMETER_NAME,
@@ -152,7 +160,7 @@ public class MultipleActionServlet extends AServlet {
 			new DaoCallSupport(this.timezoneDao, tzInfoOneCallParams));
 	}
 
-	public void setTotalPagesMapAttribute(HttpServletRequest request) {
+	public void setTotalPagesMapAttribute(final HttpServletRequest request) {
 		final Map<String, Integer> totalDataPagesMap = new HashMap<>(1);
 		totalDataPagesMap.put(
 			SELECTOR_CLASS_TIMEZONE_INFO_1, 

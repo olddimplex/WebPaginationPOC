@@ -3,6 +3,7 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
+import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -96,7 +98,7 @@ public class EditableActionServlet extends AServlet {
 		if (fragmentClassName != null) {
 			try {
 				response.setContentType("application/json");
-				response.getOutputStream().print('[');
+				response.getOutputStream().print("{\"content\":[");
 				switch(fragmentClassName) {
 					case SELECTOR_CLASS_TIMEZONE_INFO: 
 						setDaoCallSupportAttributeForPage(request);
@@ -112,6 +114,13 @@ public class EditableActionServlet extends AServlet {
 //				// errors
 //				this.includeErrorListAsJsonML(request, response);
 				response.getOutputStream().print(']');
+				final Object totalDataPagesMap = 
+					request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+				if(totalDataPagesMap != null) {
+					response.getOutputStream().print(",\"meta\":");
+					response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
+				}
+				response.getOutputStream().print('}');
 			} catch (final Exception e) {
 				LOGGER.error("Failed to process an AJAX request", e);
 			}

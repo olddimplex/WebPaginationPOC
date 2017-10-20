@@ -40,3 +40,4 @@ p{margin:0 0 10px}
 .pagination-sm>li:first-child>span{border-bottom-left-radius:0;border-top-left-radius:0}
 .pagination-sm>li:last-child>a,
 .pagination-sm>li:last-child>span{border-bottom-right-radius:0;border-top-right-radius:0}
+.typeahead.dropdown-menu{max-height:50vh; overflow:auto;}

@@ -3,6 +3,7 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
+import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -94,13 +96,20 @@ public class SingleActionServlet extends AServlet {
 	 */
 	private void respondWithJson(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("application/json");
-		response.getOutputStream().print('[');
+		response.getOutputStream().print("{\"content\":[");
 		// data
 		this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_PAGE, request, new ResponseWrapper(response), response);
 //		response.getOutputStream().print(',');
 //		// errors
 //		this.includeErrorListAsJsonML(request, response);
 		response.getOutputStream().print(']');
+		final Object totalDataPagesMap = 
+			request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+		if(totalDataPagesMap != null) {
+			response.getOutputStream().print(",\"meta\":");
+			response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
+		}
+		response.getOutputStream().print('}');
 	}
 
 	/**

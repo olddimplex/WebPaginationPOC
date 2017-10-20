@@ -1,5 +1,6 @@
 package action;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.servlet.ServletConfig;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.Logger;
 
+import sitemap.ViewPath;
 import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DaoCallSupport;
