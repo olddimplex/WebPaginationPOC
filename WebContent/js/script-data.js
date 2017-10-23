@@ -29,6 +29,7 @@
         	context.find("." + className).empty().html($('script[data-template="loading-indicator"]').html());
         	var params = getCommonParams();
         	params["location"] = window.location.toString(); // possibly redirect here to refresh page
+        	addLoader();
         	getContent($.extend(params, e.currentTarget.dataset), function(data) {
         		onAjaxUpdate(data, className);
         	});
@@ -121,21 +122,22 @@
 			var dataArray = getDataToRender(data);
 			if(dataArray) {
 				var nodesToUpdate = getNodesToUpdate(className);
-				for(var i = 0; i < nodesToUpdate.length && i < dataArray.length; i++) {
-					$(nodesToUpdate[i]).empty();
-					generateAjaxContent(nodesToUpdate[i], dataArray[i], 0);
-					init($(nodesToUpdate[i]));
-				}
+				$.each(nodesToUpdate, function(ndx, el) {
+					var $el = $(el);
+					$el.empty();
+					generateAjaxContent(el, dataArray[ndx], 0);
+					init($el);
+				});
 			}
 			var totalPages = getTotalPages(data, className);
 			if(!isNaN(totalPages)) {
-				if(totalPages > 1) {
-					$(".pagination." + className).each(function(ndx, paginationContext) {
+				$(".pagination." + className).each(function(ndx, paginationContext) {
+					if(totalPages > 1) {
 						handlePaginationContext($(paginationContext), className, totalPages, false);
-					});
-				} else {
-					$(".pagination." + className).empty();
-				}
+					} else {
+						$(paginationContext).empty();
+					}
+				});
 			}
 		}
 	}

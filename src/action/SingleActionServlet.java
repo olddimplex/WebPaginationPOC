@@ -3,7 +3,6 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -18,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
-import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -39,6 +37,8 @@ public class SingleActionServlet extends AServlet {
 	private static final long serialVersionUID = -5837825589483822995L;
 	
 	private static final Logger LOGGER = LogManager.getLogger(SingleActionServlet.class);
+	
+	private final Integer PAGE_SIZE = Integer.valueOf(10);
 	
 	private final transient TimezoneDao timezoneDao;  
 	
@@ -64,59 +64,54 @@ public class SingleActionServlet extends AServlet {
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
+	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		final Integer pageSize = Integer.valueOf(10);
-		try {
-			final DAOParams callParams = new DAOParams();
-			callParams.addParameter(
-				TimezoneDao.PAGE_PARAMETER_NAME,
-				HttpUtil.getParamAsInt(request, SELECTOR_CLASS_TIMEZONE_INFO, Integer.valueOf(1)));
-			callParams.addParameter(TimezoneDao.PAGE_SIZE_PARAMETER_NAME, pageSize);
-
-			final Map<String, Integer> totalDataPagesMap = new HashMap<>(1);
-			totalDataPagesMap.put(
-				SELECTOR_CLASS_TIMEZONE_INFO, 
-				AServlet.getTotalPages(this.timezoneDao.getTimezoneInfoTotal(), pageSize));
-			AServlet.setTotalPagesMap(request, totalDataPagesMap);
-
-			request.setAttribute(DAO_CALL_SUPPORT_ATTRIBUTE_NAME, new DaoCallSupport(this.timezoneDao, callParams));
-
 			if (HttpUtil.acceptsJSON(request)) {
 				this.respondWithJson(request, response);
 			} else {
-				request.getRequestDispatcher(ViewPath.SINGLE).forward(request, response);
+				try {
+					setDaoCallSupportAttributeForPage(request);
+					setTotalPagesMapAttribute(request);
+				} catch (final Exception e) {
+					this.getLogger().error("Failed to populate", e);
+				} finally {
+					request.getRequestDispatcher(ViewPath.SINGLE).forward(request, response);
+				}
 			}
-		} catch (final Exception e) {
-			this.getLogger().error("Failed to populate", e);
-		}
 	}
 
-	/*
-	 *
+	/**
+	 * @see {@link AServlet#respondWithJson(HttpServletRequest, HttpServletResponse)}
 	 */
-	private void respondWithJson(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-		response.setContentType("application/json");
-		response.getOutputStream().print("{\"content\":[");
-		// data
+	@Override
+	protected void respondWithJsonML(
+			final HttpServletRequest request,
+			final HttpServletResponse response, 
+			final String fragmentClassName
+			) throws Exception {
+		setDaoCallSupportAttributeForPage(request);
+		setTotalPagesMapAttribute(request);
 		this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_PAGE, request, new ResponseWrapper(response), response);
 //		response.getOutputStream().print(',');
 //		// errors
 //		this.includeErrorListAsJsonML(request, response);
-		response.getOutputStream().print(']');
-		final Object totalDataPagesMap = 
-			request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
-		if(totalDataPagesMap != null) {
-			response.getOutputStream().print(",\"meta\":");
-			response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
-		}
-		response.getOutputStream().print('}');
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		this.doGet(request, response);
+	private void setDaoCallSupportAttributeForPage(final HttpServletRequest request) {
+		final DAOParams callParams = new DAOParams();
+		callParams.addParameter(
+			TimezoneDao.PAGE_PARAMETER_NAME,
+			HttpUtil.getParamAsInt(request, SELECTOR_CLASS_TIMEZONE_INFO, Integer.valueOf(1)));
+		callParams.addParameter(TimezoneDao.PAGE_SIZE_PARAMETER_NAME, PAGE_SIZE);
+		request.setAttribute(DAO_CALL_SUPPORT_ATTRIBUTE_NAME, new DaoCallSupport(this.timezoneDao, callParams));
+	}
+
+	private void setTotalPagesMapAttribute(final HttpServletRequest request) {
+		final Map<String, Integer> totalDataPagesMap = new HashMap<>(1);
+		totalDataPagesMap.put(
+			SELECTOR_CLASS_TIMEZONE_INFO, 
+			AServlet.getTotalPages(this.timezoneDao.getTimezoneInfoTotal(), PAGE_SIZE));
+		AServlet.setTotalPagesMap(request, totalDataPagesMap);
 	}
 
 }

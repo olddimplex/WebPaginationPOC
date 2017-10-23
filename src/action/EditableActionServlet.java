@@ -3,7 +3,6 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -18,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
-import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
@@ -75,6 +73,7 @@ public class EditableActionServlet extends AServlet {
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
+	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if (HttpUtil.acceptsJSON(request)) {
 			this.respondWithJson(request, response);
@@ -89,42 +88,31 @@ public class EditableActionServlet extends AServlet {
 			}
 		}
 	}
+	
 
-	/*
-	 *
+	/**
+	 * @see {@link AServlet#respondWithJson(HttpServletRequest, HttpServletResponse)}
 	 */
-	private void respondWithJson(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-		final String fragmentClassName = request.getParameter(SELECTOR_CLASS_PARAM_NAME);
-		if (fragmentClassName != null) {
-			try {
-				response.setContentType("application/json");
-				response.getOutputStream().print("{\"content\":[");
-				switch(fragmentClassName) {
-					case SELECTOR_CLASS_TIMEZONE_INFO: 
-						setDaoCallSupportAttributeForPage(request);
-						this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_EDITABLE_PAGE, request, new ResponseWrapper(response), response);
-						break;
-					case SELECTOR_CLASS_TIMEZONE_INFO_EDIT: 
-						renderTimezoneInfoEditForm(request, response);
-						break;
-				default:
-					break;
-				}
-//				response.getOutputStream().print(',');
-//				// errors
-//				this.includeErrorListAsJsonML(request, response);
-				response.getOutputStream().print(']');
-				final Object totalDataPagesMap = 
-					request.getAttribute(AServlet.TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
-				if(totalDataPagesMap != null) {
-					response.getOutputStream().print(",\"meta\":");
-					response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
-				}
-				response.getOutputStream().print('}');
-			} catch (final Exception e) {
-				LOGGER.error("Failed to process an AJAX request", e);
-			}
+	@Override
+	protected void respondWithJsonML(
+			final HttpServletRequest request,
+			final HttpServletResponse response, 
+			final String fragmentClassName
+			) throws Exception {
+		switch(fragmentClassName) {
+			case SELECTOR_CLASS_TIMEZONE_INFO: 
+				setDaoCallSupportAttributeForPage(request);
+				this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_EDITABLE_PAGE, request, new ResponseWrapper(response), response);
+				break;
+			case SELECTOR_CLASS_TIMEZONE_INFO_EDIT: 
+				renderTimezoneInfoEditForm(request, response);
+				break;
+			default:
+				break;
 		}
+	//	response.getOutputStream().print(',');
+	//	// errors
+	//	this.includeErrorListAsJsonML(request, response);
 	}
 
 	private void setDaoCallSupportAttributeForPage(final HttpServletRequest request) {
@@ -161,7 +149,8 @@ public class EditableActionServlet extends AServlet {
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	@Override
+	protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 		final TimezoneInfo tzInfoOld = 
 			this.timezoneDao.findById(HttpUtil.getParamAsInt(request, TIMEZONE_ID_PARAM_NAME, null));
 		if(tzInfoOld.getId() != null) {
@@ -173,6 +162,7 @@ public class EditableActionServlet extends AServlet {
 				)
 			);
 		}
+		// TODO Maintain a set of trusted hosts here as a security measure
 		response.sendRedirect(request.getParameter(LOCATION_PARAM_NAME));
 	}
 

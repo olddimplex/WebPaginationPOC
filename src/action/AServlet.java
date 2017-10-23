@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.Logger;
 
-import sitemap.ViewPath;
 import util.JsonUtil;
 import util.ResponseWrapper;
 import dao.DaoCallSupport;
@@ -50,6 +49,13 @@ public abstract class AServlet extends HttpServlet {
 	public void init(final ServletConfig config) throws ServletException {
 		super.init(config);
 		this.getServletContext().setAttribute("totalDataPagesMapAttributeName", TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+		this.doGet(request, response);
 	}
 
 	/**
@@ -94,6 +100,45 @@ public abstract class AServlet extends HttpServlet {
 		} catch (final Exception e) {
 			this.getLogger().error("INTERNAL SERVER ERROR", e);
 		}
+	}
+
+	/**
+	 * Prints a common JSON structure to response stream.<br/>
+	 * Relies on {@link #respondWithJsonML(HttpServletRequest, HttpServletResponse)}
+	 * for the actual content part.
+	 */
+	protected void respondWithJson(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+		final String fragmentClassName = request.getParameter(SELECTOR_CLASS_PARAM_NAME);
+		if (fragmentClassName != null) {
+			try {
+				response.setContentType("application/json");
+				response.getOutputStream().print("{\"content\":[");
+				this.respondWithJsonML(request, response, fragmentClassName);
+				response.getOutputStream().print(']');
+				final Object totalDataPagesMap = 
+					request.getAttribute(TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+				if(totalDataPagesMap != null) {
+					response.getOutputStream().print(",\"meta\":");
+					response.getOutputStream().print(JsonUtil.toJsonNoHtmlEscaping(totalDataPagesMap));
+				}
+				response.getOutputStream().print('}');
+			} catch (final Exception e) {
+				this.getLogger().error("Failed to process an AJAX request", e);
+			}
+		}
+	}
+
+	/**
+	 * Noop implementation, designed for overriding.
+	 * 
+	 * @param request
+	 * @param response
+	 */
+	protected void respondWithJsonML(
+			final HttpServletRequest request, 
+			final HttpServletResponse response,
+			final String fragmentClassName
+			) throws Exception {
 	}
 
 	protected abstract Logger getLogger();

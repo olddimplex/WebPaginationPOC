@@ -1,6 +1,5 @@
 package dao;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +35,8 @@ public final class DAOParams {
         return null;
     }
 
-    public <T> T getParameter(final String key, final Class<T> clazz) {
+	@SuppressWarnings("unchecked")
+	public <T> T getParameter(final String key, final Class<T> clazz) {
         final Object value = this.getParameter(key);
         if (value == null) {
             return null;

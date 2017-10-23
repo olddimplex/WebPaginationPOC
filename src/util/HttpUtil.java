@@ -1,14 +1,8 @@
 package util;
 
-import java.math.BigDecimal;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
-import org.apache.commons.lang3.StringEscapeUtils;
-
-import action.AServlet;
 
 public final class HttpUtil {
 

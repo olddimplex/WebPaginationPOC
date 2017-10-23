@@ -22,7 +22,8 @@ import dao.IStreamingCallback;
  */
 public final class IncludeTagSupport extends SimpleTagSupport {
 
-    private static final Logger LOGGER = LogManager.getLogger(IncludeTagSupport.class);
+    @SuppressWarnings("unused")
+	private static final Logger LOGGER = LogManager.getLogger(IncludeTagSupport.class);
     
     private String dao;
     private String dataObjectKey;
