@@ -7,6 +7,9 @@ public class ViewPath {
 	public static final String EDITABLE = "/WEB-INF/editable/editable.jsp";
 	public static final String AUTOCOMPLETE = "/WEB-INF/auto/autocomplete.jsp";
 	
+	public static final String FRAGMENT_BODY_FOOTER = "/WEB-INF/fragments/body-footer.jsp";
+	public static final String FRAGMENT_HEAD_HEADER = "/WEB-INF/fragments/head-header.jsp";
+	
 	public static final String FRAGMENT_NAVIGATION_MENU = "/WEB-INF/fragments/navigation-menu.jsp";
 	public static final String FRAGMENT_NAVIGATION_MENU_ITEM = "/WEB-INF/fragments/navigation-menu-item.jsp";
 	public static final String FRAGMENT_PAGINATION = "/WEB-INF/fragments/pagination.jsp";

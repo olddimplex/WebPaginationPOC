@@ -11,14 +11,8 @@
 <html lang="en">
   <head>
     <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<c:url value='/css/bootstrap.min.css'/>">
-	<link rel="stylesheet" href="<c:url value='/css/style-min.css'/>?t=<%=new Date().getTime() %>">
+	<jsp:include page="<%=ViewPath.FRAGMENT_HEAD_HEADER %>"/>
 	<link rel="stylesheet" href="<c:url value='/font-awesome-4.7.0/css/font-awesome.min.css'/>">
-	
 	<style>
 		.typeahead-loaging {
 			background:url(<c:url value="/img/loading.gif"/>) no-repeat right center/contain content-box;
@@ -99,11 +93,6 @@
 	<script type="text/template" data-template="loading-indicator">
 		<div style="background:url(<c:url value='/img/loading.gif' />) no-repeat center center; width:100%; height:32px;">&nbsp;</div>
 	</script>
-    <!-- jQuery first, then Tether, then Bootstrap JS. -->
-    <script src="<c:url value='/js/jquery-3.1.1.min.js' />"></script>
-    <script src="<c:url value='/js/tether.min.js' />"></script>
-    <script src="<c:url value='/js/bootstrap.min.js' />"></script>
-    <script src="<c:url value='/js/typeahead.js' />"></script>
-    <script src="<c:url value='/js/script-data.js' />?t=<%=new Date().getTime() %>"></script>
+	<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
   </body>
 </html>
