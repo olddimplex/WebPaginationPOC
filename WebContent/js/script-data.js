@@ -26,6 +26,9 @@
      */
     function init(el) {
         // Possibly render parts of page on click
+    	$(".modal-body form").on('submit', function() {
+    		history.back()
+    	})
         el.find('.ajax-update:not(form)').on('click', function (e) {
             var context = $(e.currentTarget.dataset.target);
             var className = e.currentTarget.dataset["classname"];
@@ -309,18 +312,17 @@
             },
             url: window.location.href.split("?")[0],
             data: params,
-            type: 'GET',
-
+            type: 'GET'
         })
-            .done(callbackDone)
-            .fail(callbackFail)
-            .always(function () {
-                // Remove loader
-                $("#loader").remove();
-                if (callbackAlways) {
-                    callbackAlways();
-                }
-            });
+        .done(callbackDone)
+        .fail(callbackFail)
+        .always(function () {
+            // Remove loader
+            $("#loader").remove();
+            if (callbackAlways) {
+                callbackAlways();
+            }
+        });
     }
 
     function handlePaginationContext(paginationContext, className, totalPages, addEventHandler) {
