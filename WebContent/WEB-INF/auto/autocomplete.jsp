@@ -14,7 +14,7 @@
 	<jsp:include page="<%=ViewPath.FRAGMENT_HEAD_HEADER %>"/>
 	<link rel="stylesheet" href="<c:url value='/font-awesome-4.7.0/css/font-awesome.min.css'/>">
 	<style>
-		.typeahead-loaging {
+		.typeahead-loading {
 			background:url(<c:url value="/img/loading.gif"/>) no-repeat right center/contain content-box;
 		}
 	</style>
