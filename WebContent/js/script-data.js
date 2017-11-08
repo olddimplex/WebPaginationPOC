@@ -67,9 +67,18 @@
                 history.pushState(stateObj, null, newUrl);
             });
         });
+       	// Ensure all ordinary forms submit the page refresh url too (may not be known to server due to intermediaries)
+	   	el.find('form:not(.ajax-update)').submit(function (e) {
+            $(e.currentTarget).find('input[type="hidden"][name="location"]:first').each(function (ndx, el) {
+		    	$(el).attr("value", window.location.toString());
+		    });
+            return true;
+	   	});
         // Possibly render parts of page on load/refresh
         el.find("input[name='ajax-update']").each(function () {
             var className = $(this).val();
+            // The target area may be anywhere, so the whole document is scanned
+            $("." + className).empty();
             getContent({"classname": className}, function (data) {
                 onAjaxUpdate(data, className);
             });

@@ -125,7 +125,7 @@ Example *(start button of a pagination control for the region marked as ${cls})*
 
 - CSS
 
-Whenever a CSS rule contains a server URL, it is kept in a JSP, so as to maintain the context path in a consistent manner and possibly use Java constants (for refactoring purposes).
+Whenever a CSS rule contains a server URL (absolute), it is kept in a JSP, so as to maintain the context path in a consistent manner and possibly use Java constants (for refactoring purposes).
 
 Example *(WEB-INF/auto/autocomplete.jsp)*:
 ```
@@ -197,7 +197,7 @@ The above makes a GET request to populate and show a modal form. The `ajax-updat
 ```
 Again, it is the `ajax-update` class that makes submitting the form an AJAX call. Note the hidden \<input\> holding the `classname` parameter - it serves the same purpose as in the previous example. The request includes all parameters available in browser window's URL too. 
 
-- by including a hidden \<input\> tag *(not yet illustrated)*.
+- by including a hidden \<input\> tag *(see the [I18N Example](https://github.com/olddimplex/I18nExample))*.
 
 Due to the use of streaming, some parts of the window may need an update after the entire page is loaded. An example could be the data set appears empty and a message needs to be shown in the beginning of page (already streamed at the time this condition is detected). In such cases a hidden \<input\> may be added with the special name `ajax-update` and a value holding the target region's marking class:
 ```
