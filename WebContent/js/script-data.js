@@ -136,13 +136,17 @@
     function onAjaxUpdate(data, className) {
         if (className) {
             var dataArray = getDataToRender(data);
-            if (dataArray) {
+            if (dataArray && dataArray.length > 0) {
                 var nodesToUpdate = getNodesToUpdate(className);
                 $.each(nodesToUpdate, function (ndx, el) {
-                    var $el = $(el);
-                    $el.empty();
-                    generateAjaxContent(el, dataArray[ndx], 0);
-                    init($el);
+                	if(ndx < dataArray.length) {
+	                    var $el = $(el);
+	                    $el.empty();
+	                    generateAjaxContent(el, dataArray[ndx], 0);
+	                    init($el);
+                	} else {
+                		return false;
+                	}
                 });
             }
             var totalPages = getTotalPages(data, className);
