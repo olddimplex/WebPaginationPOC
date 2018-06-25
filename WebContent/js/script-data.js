@@ -26,45 +26,42 @@
      */
     function init(el) {
         // Possibly render parts of page on click
+    	//TODO remove
     	$(".modal-body form").on('submit', function() {
     		history.back()
     	})
         el.find('.ajax-update:not(form)').on('click', function (e) {
             var context = $(e.currentTarget.dataset.target);
             var className = e.currentTarget.dataset["classname"];
+            var targetUrl = e.currentTarget.dataset["target_url"];
             // The following HTML will be replaced by the actual content
             context.find("." + className).empty().html($('script[data-template="loading-indicator"]').html());
             var params = getCommonParams();
             params["location"] = window.location.toString(); // possibly redirect here to refresh page
             addLoader();
-            getContent($.extend(params, e.currentTarget.dataset), function (data) {
-                onAjaxUpdate(data, className);
+            getContent(targetUrl, $.extend(params, e.currentTarget.dataset), function (data) {
+                maintainHistory(className, onAjaxUpdate(data, className), data);
             });
         });
         // Possibly render parts of page on click
        el.find('form.ajax-update').on('submit', function (e) {
             e.preventDefault();
             var fieldData = getCommonParams();
-            $(e.currentTarget).find("input, textarea, select").each(function (ndx, el) {
+            var form = $(e.currentTarget);
+            form.find("input, textarea, select").each(function (ndx, el) {
                 // radio and checkbox input types not supported !!!
                 fieldData[el.name] = $(el).val();
             });
             var className = fieldData["classname"];
+            var targetUrl = fieldData["target_url"];
+            var postEventName = form.data("post_event_name");
+            var postEventTargetSelector = form.data("post_event_target");
             addLoader();
-            getContent(fieldData, function (data) {
-                onAjaxUpdate(data, className);
-                // Maintain history
-                addPopstateListener();
-
-                // You can't restore form data in the general case
-                // since there may be multiple forms on page,
-                // therefore not supported here
-                var state = stateObj[className];
-                state.totalPages = getTotalPages(data, className);
-                state.data = getDataToRender(data);
-
-                var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(fieldData);
-                history.pushState(stateObj, null, newUrl);
+            getContent(targetUrl, fieldData, function (data) {
+                maintainHistory(className, onAjaxUpdate(data, className), data);
+                if(postEventName && postEventTargetSelector) {
+                	$(postEventTargetSelector).trigger(postEventName);
+                }
             });
         });
        	// Ensure all ordinary forms submit the page refresh url too (may not be known to server due to intermediaries)
@@ -77,10 +74,11 @@
         // Possibly render parts of page on load/refresh
         el.find("input[name='ajax-update']").each(function () {
             var className = $(this).val();
+            var targetUrl = e.currentTarget.dataset["target_url"];
             // The target area may be anywhere, so the whole document is scanned
             $("." + className).empty();
-            getContent({"classname": className}, function (data) {
-                onAjaxUpdate(data, className);
+            getContent(targetUrl, {"classname": className}, function (data) {
+            	maintainHistory(className, onAjaxUpdate(data, className), data);
             });
         });
         // Possibly render parts of page on load/refresh
@@ -97,7 +95,9 @@
             self.typeahead({
                 source: function (query, process) {
                     self.toggleClass("typeahead-loading");
-                    getContent($.extend(params, {"query": query}),
+                    getContent(
+                    	undefined,
+                    	$.extend(params, {"query": query}),
                         function (data) { // called on success
                             process(getDataToRender(data)[0]);
                         },
@@ -134,16 +134,17 @@
      * Handles JSONML format, see: http://www.jsonml.org/
      */
     function onAjaxUpdate(data, className) {
+    	var htmlArray = [];
         if (className) {
             var dataArray = getDataToRender(data);
             if (dataArray && dataArray.length > 0) {
                 var nodesToUpdate = getNodesToUpdate(className);
                 $.each(nodesToUpdate, function (ndx, el) {
                 	if(ndx < dataArray.length) {
-	                    var $el = $(el);
-	                    $el.empty();
+                		htmlArray.push(el.innerHTML);
+	                    el.innerHTML = "";
 	                    generateAjaxContent(el, dataArray[ndx], 0);
-	                    init($el);
+	                    init($(el));
                 	} else {
                 		return false;
                 	}
@@ -160,6 +161,7 @@
                 });
             }
         }
+        return htmlArray;
     }
 
     function getDataToRender(data) {
@@ -317,13 +319,13 @@
         return aParams.join("&");
     }
 
-    function getContent(params, callbackDone, callbackFail, callbackAlways) {
+    function getContent(url, params, callbackDone, callbackFail, callbackAlways) {
         jQuery.ajax({
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Content-Type", "application/json");
                 xhr.setRequestHeader("Accept", "application/json");
             },
-            url: window.location.href.split("?")[0],
+            url: url || window.location.href.split("?")[0],
             data: params,
             type: 'GET'
         })
@@ -391,6 +393,7 @@
                 currentParams[className] = currentPage;
 
                 getContent(
+                	undefined,
                     $.extend({}, currentParams, {
                         "classname": className
                     }),
@@ -450,6 +453,31 @@
     }
 
     var stateObj = {};
+    var ajaxUpdateHappened = false;
+    
+    function maintainHistory(className, htmlArray, data) {
+    	if(htmlArray.length > 0) {
+    		var state = {};
+    		state[className] = stateObj[className] || {};
+    		if(!ajaxUpdateHappened) {
+    			state[className].data.Html = htmlArray;
+    			history.pushState(state, null, window.location.toString());
+    		}
+    		
+    		ajaxUpdateHappened = true;
+    		
+    		addPopStateListener();
+    		
+    		//TODO restore form data
+    		
+    		state = {};
+    		state[className] = stateObj[className] || {};
+    		state.totalPages = getTotalPages(data, className);
+    		state[className].data = getDataToRender(data);
+    		
+    		history.pushState(state, null, window.location.toString());
+    	}
+    }
 
     $(document).ready(function ($) {
         $(".pagination").each(function (ndx, paginationContext) {
