@@ -48,9 +48,15 @@
             e.preventDefault();
             var fieldData = getCommonParams();
             var form = $(e.currentTarget);
-            form.find("input, textarea, select").each(function (ndx, el) {
-                // radio and checkbox input types not supported !!!
-                fieldData[el.name] = $(el).val();
+            form.find("input").each(function (ndx, el) {
+            	if((['checkbox','radio'].indexOf(el.type) < 0 || el.checked) && el.name) {
+            		fieldData[el.name] = $(el).val();
+            	}
+            });
+            form.find("textarea, select").each(function (ndx, el) {
+            	if((['checkbox','radio'].indexOf(el.type) < 0 || el.checked) && el.name) {
+            		fieldData[el.name] = $(el).val();
+            	}
             });
             var className = fieldData["classname"];
             var targetUrl = fieldData["target_url"];
