@@ -39,7 +39,7 @@
             var params = getCommonParams();
             params["location"] = window.location.toString(); // possibly redirect here to refresh page
             addLoader();
-            getContent(targetUrl, $.extend(params, e.currentTarget.dataset), function (data) {
+            getContent("GET", targetUrl, $.extend(params, e.currentTarget.dataset), function (data) {
                 maintainHistory(className, onAjaxUpdate(data, className), data);
             });
         });
@@ -63,7 +63,7 @@
             var postEventName = form.data("post_event_name");
             var postEventTargetSelector = form.data("post_event_target");
             addLoader();
-            getContent(targetUrl, fieldData, function (data) {
+            getContent("POST", targetUrl, fieldData, function (data) {
                 maintainHistory(className, onAjaxUpdate(data, className), data);
                 if(postEventName && postEventTargetSelector) {
                 	$(postEventTargetSelector).trigger(postEventName);
@@ -83,7 +83,7 @@
             var targetUrl = e.currentTarget.dataset["target_url"];
             // The target area may be anywhere, so the whole document is scanned
             $("." + className).empty();
-            getContent(targetUrl, {"classname": className}, function (data) {
+            getContent("GET", targetUrl, {"classname": className}, function (data) {
             	maintainHistory(className, onAjaxUpdate(data, className), data);
             });
         });
@@ -102,6 +102,7 @@
                 source: function (query, process) {
                     self.toggleClass("typeahead-loading");
                     getContent(
+                    	"GET",
                     	undefined,
                     	$.extend(params, {"query": query}),
                         function (data) { // called on success
@@ -325,7 +326,7 @@
         return aParams.join("&");
     }
 
-    function getContent(url, params, callbackDone, callbackFail, callbackAlways) {
+    function getContent(type, url, params, callbackDone, callbackFail, callbackAlways) {
         jQuery.ajax({
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Content-Type", "application/json");
@@ -333,7 +334,7 @@
             },
             url: url || window.location.href.split("?")[0],
             data: params,
-            type: 'GET'
+            type: type || 'GET'
         })
         .done(callbackDone)
         .fail(callbackFail)
@@ -399,6 +400,7 @@
                 currentParams[className] = currentPage;
 
                 getContent(
+                	"GET",
                 	undefined,
                     $.extend({}, currentParams, {
                         "classname": className
