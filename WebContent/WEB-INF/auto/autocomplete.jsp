@@ -20,7 +20,6 @@
 	</style>
   </head>
   <body>
-  	<div id="loader" class="loadcloak"></div>
 	<jsp:include page="<%=ViewPath.FRAGMENT_NAVIGATION_MENU %>"/>
 	<div class="container col-md-10 float-left">
 		<form class="form-inline my-3 ajax-update">

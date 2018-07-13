@@ -12,7 +12,7 @@
 	<jsp:include page="<%=ViewPath.FRAGMENT_HEAD_HEADER %>"/>
   </head>
   <body>
-  	<div id="loader" class="loadcloak"></div>
+  	<!-- div id="loader" class="loadcloak"></div -->
 	<jsp:include page="<%=ViewPath.FRAGMENT_NAVIGATION_MENU %>"/>
 	<div class="container col-md-10 float-left">
 <c:if test="${not empty param[showSecondaryPaginationControlParamName]}">

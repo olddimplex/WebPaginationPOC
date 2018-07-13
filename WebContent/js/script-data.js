@@ -304,12 +304,6 @@
         }
 
         paginationContext.html(content);
-        paginationContext.on("click", ".addLoader", function (event) {
-            if (!$(this).hasClass('disabled')) {
-                addLoader();
-            }
-        });
-
     }
 
     function getRequestBody(oParams) {
@@ -419,6 +413,14 @@
                     }
                 );
             });
+            
+            paginationContext.on("click", ".addLoader", function (event) {
+            	console.log(".addLoader clicked");
+                if (!$(this).hasClass('disabled')) {
+                    addLoader();
+                }
+            });
+
         }
 
         addPopstateListener();
@@ -433,6 +435,7 @@
 
         buildPagination(stateObj[className], paginationContext);
 
+        return paginationContext;
     }
 
     function addPopstateListener() {
