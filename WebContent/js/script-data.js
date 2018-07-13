@@ -415,7 +415,6 @@
             });
             
             paginationContext.on("click", ".addLoader", function (event) {
-            	console.log(".addLoader clicked");
                 if (!$(this).hasClass('disabled')) {
                     addLoader();
                 }
