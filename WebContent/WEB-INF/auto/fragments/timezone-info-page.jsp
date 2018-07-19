@@ -6,8 +6,8 @@
 <% request.removeAttribute(AServlet.VIEW_COUNT_ATTRIBUTE_NAME); %>
 <cust:include 
 	dao="<%=AServlet.DAO_CALL_SUPPORT_ATTRIBUTE_NAME %>" 
-	dataObject="<%=EditableActionServlet.TIMEZONE_INFO_DATA_ATTRIBUTE_NAME %>" 
-	view="<%=ViewPath.FRAGMENT_TIMEZONE_INFO_DATA_EDITABLE %>"
+	dataObject="<%=AutocompleteActionServlet.TIMEZONE_INFO_DATA_ATTRIBUTE_NAME %>" 
+	view="<%=ViewPath.FRAGMENT_TIMEZONE_INFO_AUTOCOMPLETE_DATA %>"
 	viewCount="${viewCountAttributeName}"
 />
 <c:if test="${empty requestScope[viewCountAttributeName]}">

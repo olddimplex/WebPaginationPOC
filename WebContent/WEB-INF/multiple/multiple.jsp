@@ -6,6 +6,10 @@
 <%@ taglib prefix="cust" uri="/WEB-INF/taglibs/custom.tld" %>
 <c:set var="selectorClassTimezoneInfoOne" scope="page" value="<%=MultipleActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_1 %>"/>
 <c:set var="selectorClassTimezoneInfoTwo" scope="page" value="<%=MultipleActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_2 %>"/>
+<c:set var="selectorClassError" scope="page" value='<%=
+			MultipleActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_1
+	+ " " + MultipleActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_2
+%>'/>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -45,6 +49,9 @@
 			<jsp:param value="${selectorClassTimezoneInfoTwo}" name="selectorClass"/>
 		</jsp:include>
 	</div>
-	<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+	<div class="${selectorClassError}">
+<jsp:include page="<%=ViewPath.FRAGMENT_ERROR_LIST %>"/>
+	</div>
   </body>
 </html>

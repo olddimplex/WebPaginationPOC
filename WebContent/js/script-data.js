@@ -25,11 +25,6 @@
      * Initializes any DOM element just populated, also called on $(document).ready()
      */
     function init(el) {
-        // Possibly render parts of page on click
-    	//TODO remove
-    	$(".modal-body form").on('submit', function() {
-    		history.back()
-    	})
         el.find('.ajax-update:not(form)').on('click', function (e) {
             var context = $(e.currentTarget.dataset.target);
             var className = e.currentTarget.dataset["classname"];
@@ -44,7 +39,7 @@
             });
         });
         // Possibly render parts of page on click
-       el.find('form.ajax-update').on('submit', function (e) {
+        el.find('form.ajax-update').on('submit', function (e) {
             e.preventDefault();
             var fieldData = getCommonParams();
             var form = $(e.currentTarget);
@@ -133,6 +128,12 @@
                     return JSON.stringify(item);
                 }
             });
+        });
+        
+        $('input[type=hidden][name=user_message]').each(function(){
+            var currentTarget = $(this);
+            showAlert(currentTarget.data('alert'), currentTarget.data('header'), currentTarget.val())
+            currentTarget.remove();
         });
     }
 
@@ -323,7 +324,6 @@
     function getContent(type, url, params, callbackDone, callbackFail, callbackAlways) {
         jQuery.ajax({
             beforeSend: function (xhr) {
-                xhr.setRequestHeader("Content-Type", "application/json");
                 xhr.setRequestHeader("Accept", "application/json");
             },
             url: url || window.location.href.split("?")[0],
@@ -331,8 +331,13 @@
             type: type || 'GET'
         })
         .done(callbackDone)
-        .fail(callbackFail)
-        .always(function () {
+        .fail(function(jqXHR, textStatus, errorThrown) {
+        	showAlert('danger', 'Error', 'AJAX request failed');
+        	if(callbackFail) {
+        		callbackFail();
+        	}
+        })
+        .always(function (/*data|jqXHR, textStatus, jqXHR|errorThrown*/) {
             // Remove loader
             $("#loader").remove();
             if (callbackAlways) {
@@ -470,13 +475,13 @@
     		var state = {};
     		state[className] = stateObj[className] || {};
     		if(!ajaxUpdateHappened) {
-    			state[className].data.Html = htmlArray;
+    			state[className].dataHtml = htmlArray;
     			history.pushState(state, null, window.location.toString());
     		}
     		
     		ajaxUpdateHappened = true;
     		
-    		addPopStateListener();
+    		addPopstateListener();
     		
     		//TODO restore form data
     		
@@ -487,6 +492,35 @@
     		
     		history.pushState(state, null, window.location.toString());
     	}
+    }
+
+    function showAlert(type, title, message) {
+        var icon, theme;
+        switch (type) {
+            case "warning":
+                icon = "fa fa-exclamation-triangle";
+                theme = "jnoty-warning";
+                break;
+            case "danger":
+                icon = "fa fa-times-circle-o";
+                theme = "jnoty-danger";
+                break;
+            case "success":
+                icon = "fa fa-check-square-o";
+                theme = "jnoty-success";
+                break;
+            default:
+                icon = "fa fa-info-circle";
+                theme = "jnoty-info";
+        }
+
+        $.jnoty(message, {
+            header: title,
+            theme: theme,
+            icon: icon,
+            sticky: true,
+            position: "top-right"
+        });
     }
 
     $(document).ready(function ($) {

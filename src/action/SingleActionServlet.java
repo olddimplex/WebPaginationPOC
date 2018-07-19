@@ -14,13 +14,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import sitemap.ServletPath;
-import sitemap.ViewPath;
-import util.HttpUtil;
-import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
 import dao.tz.TimezoneDao;
+import domain.UserMessage;
+import sitemap.ServletPath;
+import sitemap.ViewPath;
+import util.HttpUtil;
+import util.IStringTransformer;
+import util.ResponseWrapper;
+import util.UserMessageUtils;
 
 /**
  * Servlet implementation class SingleActionServlet
@@ -67,16 +70,10 @@ public class SingleActionServlet extends AServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 			if (HttpUtil.acceptsJSON(request)) {
-				this.respondWithJson(request, response);
+				super.respondWithJson(request, response);
 			} else {
-				try {
-					setDaoCallSupportAttributeForPage(request);
-					setTotalPagesMapAttribute(request);
-				} catch (final Exception e) {
-					this.getLogger().error("Failed to populate", e);
-				} finally {
-					request.getRequestDispatcher(ViewPath.SINGLE).forward(request, response);
-				}
+				this.setDataAttributes(request);
+				request.getRequestDispatcher(ViewPath.SINGLE).forward(request, response);
 			}
 	}
 
@@ -86,15 +83,25 @@ public class SingleActionServlet extends AServlet {
 	@Override
 	protected void respondWithJsonML(
 			final HttpServletRequest request,
-			final HttpServletResponse response, 
+			final HttpServletResponse response,
 			final String fragmentClassName
 			) throws Exception {
-		setDaoCallSupportAttributeForPage(request);
-		setTotalPagesMapAttribute(request);
+		this.setDataAttributes(request);
 		this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_PAGE, request, new ResponseWrapper(response), response);
-//		response.getOutputStream().print(',');
-//		// errors
-//		this.includeErrorListAsJsonML(request, response);
+		// errors
+		response.getOutputStream().print(',');
+		this.includeAsJsonML(ViewPath.FRAGMENT_ERROR_LIST, request, new ResponseWrapper(response), response);
+	}
+
+	private void setDataAttributes(final HttpServletRequest request) {
+		try {
+			setDaoCallSupportAttributeForPage(request);
+			setTotalPagesMapAttribute(request);
+		} catch (final Exception e) {
+			LOGGER.error("Failed to prepare for rendering data from backend", e);
+			// the following message will be translated - may differ from local log message
+			UserMessageUtils.addUserMessage(request, "Failed to prepare for rendering data from backend", UserMessage.Status.ERROR, IStringTransformer.ECHO);
+		}
 	}
 
 	private void setDaoCallSupportAttributeForPage(final HttpServletRequest request) {

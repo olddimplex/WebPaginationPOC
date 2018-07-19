@@ -3,9 +3,9 @@
 <%@ page import="action.*" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <c:set var="timezoneInfoData" scope="page" value="${requestScope[timezoneInfoDataEditableAttributeName]}"/>
-<c:set var="timezoneIdParamName" scope="page" value="<%=EditableActionServlet.TIMEZONE_ID_PARAM_NAME %>"/>
-<c:set var="timezoneNameParamName" scope="page" value="<%=EditableActionServlet.TIMEZONE_NAME_PARAM_NAME %>"/>
-<c:set var="timezoneOffsetParamName" scope="page" value="<%=EditableActionServlet.TIMEZONE_OFFSET_PARAM_NAME %>"/>
+<c:set var="timezoneIdParamName" scope="page" value="<%=AutocompleteActionServlet.TIMEZONE_ID_PARAM_NAME %>"/>
+<c:set var="timezoneNameParamName" scope="page" value="<%=AutocompleteActionServlet.TIMEZONE_NAME_PARAM_NAME %>"/>
+<c:set var="timezoneOffsetParamName" scope="page" value="<%=AutocompleteActionServlet.TIMEZONE_OFFSET_PARAM_NAME %>"/>
 <%-- 
 	Note the following must be a valid XML.
 	Any text entity (like &nbsp;) must be declared unless it is a standard XML entity (&amp; | &lt; | &gt; | &quot; | &apos;),
@@ -15,10 +15,10 @@
 	<form
 		class="ajax-update" 
 		method="post"
-		data-post_event_name="click"
-		data-post_event_target="ul.<%= EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO %>.pagination > li.page.active > a"
+		data-post_event_name="submit"
+		data-post_event_target="#searchForm"
 		>
-      <input type="hidden" name="${selectorClassParamName}" value="<%= EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_UPDATE %>"/>
+      <input type="hidden" name="${selectorClassParamName}" value="<%= AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_UPDATE %>"/>
 	  <div class="form-group row">
 	    <label for="staticAbbr" class="col-sm-3 col-form-label">Abbreviation</label>
 	    <div class="col-sm-9">

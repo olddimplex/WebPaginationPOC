@@ -5,6 +5,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="cust" uri="/WEB-INF/taglibs/custom.tld" %>
 <c:set var="selectorClassName" scope="page" value="<%=EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO %>"/>
+<c:set var="selectorClassError" scope="page" value='<%=
+			EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO
+	+ " " + EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_EDIT
+	+ " " + EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_UPDATE
+%>'/>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -52,6 +57,9 @@
 	<script type="text/template" data-template="loading-indicator">
 		<div style="background:url(<c:url value='/img/loading.gif' />) no-repeat center center; width:100%; height:32px;">&nbsp;</div>
 	</script>
-	<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+	<div class="${selectorClassError}">
+<jsp:include page="<%=ViewPath.FRAGMENT_ERROR_LIST %>"/>
+	</div>
   </body>
 </html>

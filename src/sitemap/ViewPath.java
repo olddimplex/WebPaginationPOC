@@ -9,6 +9,7 @@ public class ViewPath {
 	
 	public static final String FRAGMENT_BODY_FOOTER = "/WEB-INF/fragments/body-footer.jsp";
 	public static final String FRAGMENT_HEAD_HEADER = "/WEB-INF/fragments/head-header.jsp";
+	public static final String FRAGMENT_ERROR_LIST = "/WEB-INF/fragments/error-list.jsp";
 	
 	public static final String FRAGMENT_NAVIGATION_MENU = "/WEB-INF/fragments/navigation-menu.jsp";
 	public static final String FRAGMENT_NAVIGATION_MENU_ITEM = "/WEB-INF/fragments/navigation-menu-item.jsp";
@@ -19,8 +20,12 @@ public class ViewPath {
 	public static final String FRAGMENT_TIMEZONE_INFO_1_PAGE = "/WEB-INF/multiple/fragments/timezone-info-one-page.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_2_PAGE = "/WEB-INF/multiple/fragments/timezone-info-two-page.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_EDITABLE_PAGE = "/WEB-INF/editable/fragments/timezone-info-page.jsp";
+	public static final String FRAGMENT_TIMEZONE_INFO_AUTOCOMPLETE_PAGE = "/WEB-INF/auto/fragments/timezone-info-page.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_DATA = "/WEB-INF/single/fragments/timezone-info-data.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_DATA_MULTIPLE = "/WEB-INF/multiple/fragments/timezone-info-data.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_DATA_EDITABLE = "/WEB-INF/editable/fragments/timezone-info-data.jsp";
+	public static final String FRAGMENT_TIMEZONE_INFO_AUTOCOMPLETE_DATA = "/WEB-INF/auto/fragments/timezone-info-data.jsp";
 	public static final String FRAGMENT_TIMEZONE_INFO_FORM = "/WEB-INF/editable/fragments/timezone-info-form.jsp";
+	public static final String FRAGMENT_TIMEZONE_INFO_AUTOCOMPLETE_FORM = "/WEB-INF/auto/fragments/timezone-info-form.jsp";
+	public static final String FRAGMENT_TIMEZONE_SEARCH_AUTOCOMPLETE_INPUT = "/WEB-INF/auto/fragments/timezone-search-input.jsp";
 }

@@ -3,6 +3,7 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,11 +18,14 @@ import org.apache.logging.log4j.Logger;
 import sitemap.ServletPath;
 import sitemap.ViewPath;
 import util.HttpUtil;
+import util.IStringTransformer;
 import util.ResponseWrapper;
+import util.UserMessageUtils;
 import dao.DAOParams;
 import dao.DaoCallSupport;
 import dao.tz.TimezoneDao;
 import domain.TimezoneInfo;
+import domain.UserMessage;
 
 /**
  * Servlet implementation class EditableActionServlet
@@ -32,8 +36,10 @@ public class EditableActionServlet extends AServlet {
 	public static final String TIMEZONE_INFO_DATA_ATTRIBUTE_NAME = "timezoneInfoDataEditable";
 	/** Pagination */
 	public static final String SELECTOR_CLASS_TIMEZONE_INFO = "timezoneInfoPage";
-	/** Modal */
+	/** Modal form */
 	public static final String SELECTOR_CLASS_TIMEZONE_INFO_EDIT = "timezoneInfoEdit";
+	/** Update form submit */
+	public static final String SELECTOR_CLASS_TIMEZONE_INFO_UPDATE = "timezoneInfoUpdate";
 	/** Holds the id of a {@link TimezoneInfo} object. */
 	public static final String TIMEZONE_ID_PARAM_NAME = "timezoneid"; // keep it lowercase
 	/** Holds the abbreviation of a {@link TimezoneInfo} object. */
@@ -76,19 +82,13 @@ public class EditableActionServlet extends AServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if (HttpUtil.acceptsJSON(request)) {
-			this.respondWithJson(request, response);
+			super.respondWithJson(request, response);
 		} else {
-			try {
-				setDaoCallSupportAttributeForPage(request);
-				setTotalPagesMapAttribute(request);
-			} catch (final Exception e) {
-				this.getLogger().error("Failed to populate", e);
-			} finally {
-				request.getRequestDispatcher(ViewPath.EDITABLE).forward(request, response);
-			}
+			this.prepareRequest(request, this::setDaoCallSupportAttributeForPage);
+			this.prepareRequest(request, this::setTotalPagesMapAttribute);
+			request.getRequestDispatcher(ViewPath.EDITABLE).forward(request, response);
 		}
 	}
-	
 
 	/**
 	 * @see {@link AServlet#respondWithJson(HttpServletRequest, HttpServletResponse)}
@@ -101,18 +101,43 @@ public class EditableActionServlet extends AServlet {
 			) throws Exception {
 		switch(fragmentClassName) {
 			case SELECTOR_CLASS_TIMEZONE_INFO: 
-				setDaoCallSupportAttributeForPage(request);
+				this.prepareRequest(request, this::setDaoCallSupportAttributeForPage);
 				this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_EDITABLE_PAGE, request, new ResponseWrapper(response), response);
+				response.getOutputStream().print(',');
 				break;
 			case SELECTOR_CLASS_TIMEZONE_INFO_EDIT: 
-				renderTimezoneInfoEditForm(request, response);
+				this.prepareRequest(request, this::setTimezoneInfoDataAttribute);
+				this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_FORM, request, new ResponseWrapper(response), response);
+				response.getOutputStream().print(',');
+				break;
+			case SELECTOR_CLASS_TIMEZONE_INFO_UPDATE:
+				this.executeUpdate(request, this::updateTimezoneInfo);
 				break;
 			default:
 				break;
 		}
-	//	response.getOutputStream().print(',');
-	//	// errors
-	//	this.includeErrorListAsJsonML(request, response);
+		// errors
+		this.includeAsJsonML(ViewPath.FRAGMENT_ERROR_LIST, request, new ResponseWrapper(response), response);
+	}
+
+	private void prepareRequest(final HttpServletRequest request, final Consumer<HttpServletRequest> consumer) {
+		try {
+			consumer.accept(request);
+		} catch (final Exception e) {
+			LOGGER.error("Failed to prepare for rendering data from backend", e);
+			// the following message will be translated - may differ from local log message
+			UserMessageUtils.addUserMessage(request, "Failed to prepare for rendering data from backend", UserMessage.Status.ERROR, IStringTransformer.ECHO);
+		}
+	}
+
+	private void executeUpdate(final HttpServletRequest request, final Consumer<HttpServletRequest> consumer) {
+		try {
+			consumer.accept(request);
+		} catch (final Exception e) {
+			LOGGER.error("Failed to execute an update", e);
+			// the following message will be translated - may differ from local log message
+			UserMessageUtils.addUserMessage(request, "Failed to execute an update", UserMessage.Status.ERROR, IStringTransformer.ECHO);
+		}
 	}
 
 	private void setDaoCallSupportAttributeForPage(final HttpServletRequest request) {
@@ -135,7 +160,7 @@ public class EditableActionServlet extends AServlet {
 		AServlet.setTotalPagesMap(request, totalDataPagesMap);
 	}
 
-	private void renderTimezoneInfoEditForm(final HttpServletRequest request, final HttpServletResponse response) {
+	private void setTimezoneInfoDataAttribute(final HttpServletRequest request) {
 		final DAOParams callParams = new DAOParams();
 		callParams.addParameter(
 			TimezoneDao.ID_PARAMETER_NAME,
@@ -143,14 +168,9 @@ public class EditableActionServlet extends AServlet {
 		request.setAttribute(
 			TIMEZONE_INFO_DATA_ATTRIBUTE_NAME, 
 			this.timezoneDao.find(callParams));
-		this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_FORM, request, new ResponseWrapper(response), response);
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	@Override
-	protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+	private void updateTimezoneInfo(final HttpServletRequest request) {
 		final TimezoneInfo tzInfoOld = 
 			this.timezoneDao.findById(HttpUtil.getParamAsInt(request, TIMEZONE_ID_PARAM_NAME, null));
 		if(tzInfoOld.getId() != null) {
@@ -162,8 +182,5 @@ public class EditableActionServlet extends AServlet {
 				)
 			);
 		}
-		// TODO Maintain a set of trusted hosts here as a security measure
-		response.sendRedirect(request.getParameter(LOCATION_PARAM_NAME));
 	}
-
 }

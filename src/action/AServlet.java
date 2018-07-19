@@ -11,9 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.Logger;
 
+import dao.DaoCallSupport;
 import util.JsonUtil;
 import util.ResponseWrapper;
-import dao.DaoCallSupport;
 
 public abstract class AServlet extends HttpServlet {
 
@@ -24,6 +24,9 @@ public abstract class AServlet extends HttpServlet {
 
 	/** For use with AJAX calls. Holds the marker class of the HTML element to update. */
 	public static final String SELECTOR_CLASS_PARAM_NAME = "classname";
+
+	/** For use with AJAX calls only. Holds the target URL of the call */
+	public static final String TARGET_URL_PARAMETER_NAME = "target_url";
 
 	/** For use with AJAX calls. Holds the URL of the current page as seen by the browser. */
 	public static final String LOCATION_PARAM_NAME = "location";
@@ -40,15 +43,34 @@ public abstract class AServlet extends HttpServlet {
 	public static final String TOTAL_PAGES_MAP_ATTRIBUTE_NAME = "totalDataPagesMap";
 
 	/**
+	 * Name of the session attribute holding validation errors to be presented to user
+	 */
+	public static final String ERROR_COLLECTION_ATTRIBUTE_NAME = "errorCollection";
+
+	/**
+	 * Name of the session attribute holding messages to be presented to user.
+	 * Note this is not intended to hold validation errors.
+	 */
+	public static final String MESSAGE_COLLECTION_ATTRIBUTE_NAME = "messageCollection";
+	/**
 	 * Name of the request attribute holding an instance of
 	 * {@link DaoCallSupport}
 	 */
 	public static final String DAO_CALL_SUPPORT_ATTRIBUTE_NAME = "dynamicIncludeDaoCallSupport";
+	/**
+	 * Name of the request attribute holding the times data view has been rendered
+	 */
+	public static final String VIEW_COUNT_ATTRIBUTE_NAME = "viewCount";
 
 	@Override
 	public void init(final ServletConfig config) throws ServletException {
 		super.init(config);
 		this.getServletContext().setAttribute("totalDataPagesMapAttributeName", TOTAL_PAGES_MAP_ATTRIBUTE_NAME);
+		this.getServletContext().setAttribute("messageCollectionAttributeName", MESSAGE_COLLECTION_ATTRIBUTE_NAME);
+		this.getServletContext().setAttribute("viewCountAttributeName", VIEW_COUNT_ATTRIBUTE_NAME);
+
+		this.getServletContext().setAttribute("selectorClassParamName", SELECTOR_CLASS_PARAM_NAME);
+		this.getServletContext().setAttribute("targetUrlParamName", TARGET_URL_PARAMETER_NAME);
 	}
 
 	/**
@@ -110,8 +132,8 @@ public abstract class AServlet extends HttpServlet {
 	protected void respondWithJson(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 		final String fragmentClassName = request.getParameter(SELECTOR_CLASS_PARAM_NAME);
 		if (fragmentClassName != null) {
+			response.setContentType("application/json");
 			try {
-				response.setContentType("application/json");
 				response.getOutputStream().print("{\"content\":[");
 				this.respondWithJsonML(request, response, fragmentClassName);
 				response.getOutputStream().print(']');

@@ -42,6 +42,9 @@
 		</jsp:include>
 </c:otherwise></c:choose>
 	</div>
-	<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+	<div class="${selectorClassName}">
+<jsp:include page="<%=ViewPath.FRAGMENT_ERROR_LIST %>"/>
+	</div>
   </body>
 </html>

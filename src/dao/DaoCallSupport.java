@@ -6,6 +6,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import domain.UserMessage;
+import util.IStringTransformer;
+import util.UserMessageUtils;
+
 public class DaoCallSupport {
 
     private static final Logger LOGGER = LogManager.getLogger(DaoCallSupport.class);
@@ -72,8 +76,7 @@ public class DaoCallSupport {
 	}
 
 	/**
-	 * For streaming database content directly to response output stream.<br/>
-	 * Note (when overriding), that all exception handling must be done here.
+	 * For streaming database content directly to response output stream.
 	 * 
 	 * @param request
 	 * @param response
@@ -85,7 +88,9 @@ public class DaoCallSupport {
 		try {
 			this.getDao().stream(this);
 		} catch (final Exception e) {
-			this.getLogger().error("Error streaming content", e);
+			LOGGER.error("Error streaming content from backend", e);
+			// the following message will be translated - may differ from local log message
+			UserMessageUtils.addUserMessage(request, "Error streaming content from backend", UserMessage.Status.ERROR, IStringTransformer.ECHO);
 		}
 	}
 }

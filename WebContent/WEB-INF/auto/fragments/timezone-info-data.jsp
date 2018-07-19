@@ -14,7 +14,7 @@
 			type="button" data-toggle="modal" data-target="#editModal" value="Edit"
 			class="btn btn-primary ajax-update"
 			data-timezoneid="${timezoneInfo.id}"
-			data-${selectorClassParamName}="<%=EditableActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_EDIT %>"
+			data-${selectorClassParamName}="<%=AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_EDIT %>"
 			/>
 	</td>
 </tr>

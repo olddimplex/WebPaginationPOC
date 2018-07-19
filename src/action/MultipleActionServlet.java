@@ -3,6 +3,7 @@ package action;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -14,13 +15,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import sitemap.ServletPath;
-import sitemap.ViewPath;
-import util.HttpUtil;
-import util.ResponseWrapper;
 import dao.DAOParams;
 import dao.DaoCallSupport;
 import dao.tz.TimezoneDao;
+import domain.UserMessage;
+import sitemap.ServletPath;
+import sitemap.ViewPath;
+import util.HttpUtil;
+import util.IStringTransformer;
+import util.ResponseWrapper;
+import util.UserMessageUtils;
 
 /**
  * Servlet implementation class MultipleActionServlet
@@ -73,18 +77,13 @@ public class MultipleActionServlet extends AServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if (HttpUtil.acceptsJSON(request)) {
-			this.setTotalPagesMapAttribute(request);
-			this.respondWithJson(request, response);
+			this.prepareRequest(request, this::setTotalPagesMapAttribute);
+			super.respondWithJson(request, response);
 		} else {
-			try {
-				this.setDaoCallSupportAttributeForTimeZoneInfoOne(request);
-				this.setDaoCallSupportAttributeForTimeZoneInfoTwo(request);
-				this.setTotalPagesMapAttribute(request);
-			} catch (final Exception e) {
-				this.getLogger().error("Failed to populate", e);
-			} finally {
-				request.getRequestDispatcher(ViewPath.MULTIPLE).forward(request, response);
-			}
+			this.prepareRequest(request, this::setDaoCallSupportAttributeForTimeZoneInfoOne);
+			this.prepareRequest(request, this::setDaoCallSupportAttributeForTimeZoneInfoTwo);
+			this.prepareRequest(request, this::setTotalPagesMapAttribute);
+			request.getRequestDispatcher(ViewPath.MULTIPLE).forward(request, response);
 		}
 	}
 	
@@ -99,22 +98,32 @@ public class MultipleActionServlet extends AServlet {
 			) throws Exception {
 		switch (fragmentClassName) {
 			case SELECTOR_CLASS_TIMEZONE_INFO_1:
-				setDaoCallSupportAttributeForTimeZoneInfoOne(request);
+				this.prepareRequest(request, this::setDaoCallSupportAttributeForTimeZoneInfoOne);
 				this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_1_PAGE, request, new ResponseWrapper(response), response);
 				break;
 			case SELECTOR_CLASS_TIMEZONE_INFO_2: 
-				setDaoCallSupportAttributeForTimeZoneInfoTwo(request);
+				this.prepareRequest(request, this::setDaoCallSupportAttributeForTimeZoneInfoTwo);
 				this.includeAsJsonML(ViewPath.FRAGMENT_TIMEZONE_INFO_2_PAGE, request, new ResponseWrapper(response), response);
 				break;
 			default: 
 				break;
 		}
-	//	response.getOutputStream().print(',');
-	//	// errors
-	//	this.includeErrorListAsJsonML(request, response);
+		// errors
+		response.getOutputStream().print(',');
+		this.includeAsJsonML(ViewPath.FRAGMENT_ERROR_LIST, request, new ResponseWrapper(response), response);
 	}
 
-	public void setDaoCallSupportAttributeForTimeZoneInfoTwo(final HttpServletRequest request) {
+	private void prepareRequest(final HttpServletRequest request, final Consumer<HttpServletRequest> consumer) {
+		try {
+			consumer.accept(request);
+		} catch (final Exception e) {
+			LOGGER.error("Failed to prepare for rendering data from backend", e);
+			// the following message will be translated - may differ from local log message
+			UserMessageUtils.addUserMessage(request, "Failed to prepare for rendering data from backend", UserMessage.Status.ERROR, IStringTransformer.ECHO);
+		}
+	}
+
+	private void setDaoCallSupportAttributeForTimeZoneInfoTwo(final HttpServletRequest request) {
 		final DAOParams tzInfoTwoCallParams = new DAOParams();
 		tzInfoTwoCallParams.addParameter(
 			TimezoneDao.PAGE_PARAMETER_NAME,
@@ -127,7 +136,7 @@ public class MultipleActionServlet extends AServlet {
 			new DaoCallSupport(this.timezoneDao, tzInfoTwoCallParams));
 	}
 
-	public void setDaoCallSupportAttributeForTimeZoneInfoOne(final HttpServletRequest request) {
+	private void setDaoCallSupportAttributeForTimeZoneInfoOne(final HttpServletRequest request) {
 		final DAOParams tzInfoOneCallParams = new DAOParams();
 		tzInfoOneCallParams.addParameter(
 			TimezoneDao.PAGE_PARAMETER_NAME,
@@ -140,7 +149,7 @@ public class MultipleActionServlet extends AServlet {
 			new DaoCallSupport(this.timezoneDao, tzInfoOneCallParams));
 	}
 
-	public void setTotalPagesMapAttribute(final HttpServletRequest request) {
+	private void setTotalPagesMapAttribute(final HttpServletRequest request) {
 		final Map<String, Integer> totalDataPagesMap = new HashMap<>(1);
 		totalDataPagesMap.put(
 			SELECTOR_CLASS_TIMEZONE_INFO_1, 

@@ -1,17 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ page import="sitemap.*" %>
 <%@ page import="action.*" %>
-<%@ page import="java.util.Date"  %>
+<%@ page import="java.util.Date" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="cust" uri="/WEB-INF/taglibs/custom.tld" %>
 <c:set var="resultListSelectorClassName" scope="page" value="<%=AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_INFO %>"/>
-<c:set var="suggestionListSelectorClassName" scope="page" value="<%=AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_ABBREVIATION_SUGGESTIONS %>"/>
-<c:set var ="timezoneAbbreviationParamName" scope="page" value="<%=AutocompleteActionServlet.TIMEZONE_ABBREVIATION_PARAM_NAME %>"/>
+<c:set var="selectorClassError" scope="page" value='<%=
+			AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_INFO
+	+ " " + AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_INFO_EDIT
+	+ " " + AutocompleteActionServlet.SELECTOR_CLASS_TIMEZONE_ABBREVIATION_SUGGESTIONS
+%>'/>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
-	<jsp:include page="<%=ViewPath.FRAGMENT_HEAD_HEADER %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_HEAD_HEADER %>"/>
 	<link rel="stylesheet" href="<c:url value='/font-awesome-4.7.0/css/font-awesome.min.css'/>">
 	<style>
 		.typeahead-loading {
@@ -20,35 +23,13 @@
 	</style>
   </head>
   <body>
-	<jsp:include page="<%=ViewPath.FRAGMENT_NAVIGATION_MENU %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_NAVIGATION_MENU %>"/>
 	<div class="container col-md-10 float-left">
-		<form class="form-inline my-3 ajax-update">
+		<form class="form-inline my-3 ajax-update" id="searchForm">
 		  <label class="mr-sm-2" for="inlineFormAbbr">Abbreviation:</label>
-		  <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-6">
-		    <div class="input-group-addon"><i class="fa fa-search" aria-hidden="true"></i></div>
-		    <input 
-		    	type="text" 
-		    	class="form-control" 
-		    	id="inlineFormAbbr"
-		    	name="${timezoneAbbreviationParamName}"
-		    	value="${param[timezoneAbbreviationParamName]}"
-<%--		    placeholder="Abbreviation" --%>
-		    	autocomplete="off"
-		    	data-provide="typeahead"
-		    	data-classname="${suggestionListSelectorClassName}"
-		    	data-highlighter-template="listitem"
-		    	data-updater-template="valueitem"
-		    	>
-<%-- Typeahead templates are expected within the same element as the referring input element (above) --%>
-		    <script type="text/template" data-template="listitem">
-				<div class="typeahead">
-					<div class="col-md-12 no-padding" style="border-bottom:1px dashed #ccc">
-						<p><small class="pull-left"><strong>{{abbreviation}}</strong></small><small class="pull-right">{{name}}</small></p>
-					</div>
-					<div class="clearfix"></div>
-				</div>
-			</script>
-		    <script type="text/template" data-template="valueitem">{{abbreviation}}</script>
+		  <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-6 ${resultListSelectorClassName}">
+<%-- Holy wisdom!!! Appears you cannot set a text input's value (as seen by user) if something has been typed in it - you must recreate the element --%>
+<jsp:include page="<%=ViewPath.FRAGMENT_TIMEZONE_SEARCH_AUTOCOMPLETE_INPUT %>"></jsp:include>
 		  </div>
 		  <input type="hidden" name="classname" value="${resultListSelectorClassName}"/>
 		  <button type="submit" class="btn btn-primary">Search</button>
@@ -92,6 +73,9 @@
 	<script type="text/template" data-template="loading-indicator">
 		<div style="background:url(<c:url value='/img/loading.gif' />) no-repeat center center; width:100%; height:32px;">&nbsp;</div>
 	</script>
-	<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+<jsp:include page="<%=ViewPath.FRAGMENT_BODY_FOOTER %>"/>
+	<div class="${selectorClassError}">
+<jsp:include page="<%=ViewPath.FRAGMENT_ERROR_LIST %>"/>
+	</div>
   </body>
 </html>
