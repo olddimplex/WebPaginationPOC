@@ -1,8 +1,6 @@
-This is a Java Web application built upon Java 7, J2EE 6 and plain Servlet/JSP on server side, respectively JQuery 3, Bootstrap 4 and some custom JavaScript in the browser.
+This is a Java Web application built upon Java 7, J2EE 6 and plain Servlet/JSP on server side, respectively JQuery 3, Bootstrap 4 and some custom JavaScript in the browser. The client-side user messages are implemented using [JNoty](https://github.com/visualapps/jnoty) jQuery plugin.
 
-The client-side user messages are implemented using [JNoty](https://github.com/visualapps/jnoty) jQuery plugin.
-
-It is about presenting relatively large tabular data sets in a Web browser. Both server and client side aspects are reviewed.
+The application is about presenting relatively large tabular data sets in a Web browser. Both server and client side aspects are reviewed.
 
 Best effort is made to implement functionalities as generic as not to be changed further, i.e. to close as many parts of code as possible. Just to name a few drivers, the following can be said:
 
