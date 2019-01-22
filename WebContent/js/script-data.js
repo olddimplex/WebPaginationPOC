@@ -15,9 +15,27 @@
             }, {})
     }
 
-    function addLoader() {
+    function addLoader(deferredObj) {
         if ($("#loader").length < 1) {
             $("body").prepend('<div id="loader" class="loadcloak"></div>');
+        }
+        if(deferredObj) {
+        	var $loader;
+        	$(document).find("#loader").each(function(e) {
+        		$loader = $(this);
+        		var loaderClasses = $loader.attr("class").split(" ");
+        		loaderClasses.push("loadcloak");
+        		$loader.attr("class", loaderClasses.join(" "));
+        	});
+        	$.when(deferredObj).always(function() {
+        		var loaderClasses = $loader.attr("class").split(" ");
+        		var loadCloakIndex = loaderClasses.indexOf("loadcloak");
+        		loaderClasses.splice(loadCloakIndex, 1);
+        		$loader.attr("class", loaderClasses.join(" "));
+        		if(loaderClasses.filter(function(c) { return c === "loadcloak"; }).length === 1) {
+        			$loader.remove();
+        		}
+        	})
         }
     }
 
@@ -29,14 +47,37 @@
             var context = $(e.currentTarget.dataset.target);
             var className = e.currentTarget.dataset["classname"];
             var targetUrl = e.currentTarget.dataset["target_url"];
+            var postEventName = e.currentTarget.dataset["post_event_name"];
+            var postEventTargetSelector = e.currentTarget.dataset["post_event_target"];
+            var postEventPriority = e.currentTarget.dataset["post_event_priority"];
             // The following HTML will be replaced by the actual content
             context.find("." + className).empty().html($('script[data-template="loading-indicator"]').html());
             var params = getCommonParams();
             params["location"] = window.location.toString(); // possibly redirect here to refresh page
-            addLoader();
-            getContent("GET", targetUrl, $.extend(params, e.currentTarget.dataset), function (data) {
+            addLoader(getContent("GET", targetUrl, $.extend(params, e.currentTarget.dataset), function (data) {
                 maintainHistory(className, onAjaxUpdate(data, className), data);
-            });
+                if(postEventName && postEventTargetSelector) {
+                	var postEventTarget = $(postEventTargetSelector);
+                	var eventNameArr = postEventName.split(/[,\s]/g);
+                	if(postEventTarget.length > 1) try {
+                		var priorityArr = postEventPriority.split(/[,\s]/g);
+                		var maxPriorityIndex = 0;
+                		for(var i = 1; i < postEventTarget.length; i++) {
+                			if(priorityArr[i] > priorityArr[maxPriorityIndex]) {
+                				maxPriorityIndex = i;
+                			}
+                		}
+                		$(postEventTarget[maxPriorityIndex]).trigger(eventNameArr[maxPriorityIndex]);
+                	} catch (e) {
+                		console.log(e);
+                	} else
+                	if(postEventPriority) { // selector returned zero or one of many possible
+                		postEventTarget.trigger(eventNameArr[0]);
+                	} else { // selector expected to return a single target
+                		postEventTarget.trigger(postEventName);
+                	}
+                }
+            }));
         });
         // Possibly render parts of page on click
         el.find('form.ajax-update').on('submit', function (e) {
@@ -57,13 +98,31 @@
             var targetUrl = fieldData["target_url"];
             var postEventName = form.data("post_event_name");
             var postEventTargetSelector = form.data("post_event_target");
-            addLoader();
-            getContent("POST", targetUrl, fieldData, function (data) {
+            var postEventPriority = form.data["post_event_priority"];
+            addLoader(getContent("POST", targetUrl, fieldData, function (data) {
                 maintainHistory(className, onAjaxUpdate(data, className), data);
                 if(postEventName && postEventTargetSelector) {
-                	$(postEventTargetSelector).trigger(postEventName);
+                	var postEventTarget = $(postEventTargetSelector);
+                	var eventNameArr = postEventName.split(/[,\s]/g);
+                	if(postEventTarget.length > 1) try {
+                		var priorityArr = postEventPriority.split(/[,\s]/g);
+                		var maxPriorityIndex = 0;
+                		for(var i = 1; i < postEventTarget.length; i++) {
+                			if(priorityArr[i] > priorityArr[maxPriorityIndex]) {
+                				maxPriorityIndex = i;
+                			}
+                		}
+                		$(postEventTarget[maxPriorityIndex]).trigger(eventNameArr[maxPriorityIndex]);
+                	} catch (e) {
+                		console.log(e);
+                	} else
+                	if(postEventPriority) { // selector returned zero or one of many possible
+                		postEventTarget.trigger(eventNameArr[0]);
+                	} else { // selector expected to return a single target
+                		postEventTarget.trigger(postEventName);
+                	}
                 }
-            });
+            }));
         });
        	// Ensure all ordinary forms submit the page refresh url too (may not be known to server due to intermediaries)
 	   	el.find('form:not(.ajax-update)').submit(function (e) {
@@ -78,11 +137,44 @@
             var targetUrl = e.currentTarget.dataset["target_url"];
             // The target area may be anywhere, so the whole document is scanned
             $("." + className).empty();
-            getContent("GET", targetUrl, {"classname": className}, function (data) {
+            addLoader(getContent("GET", targetUrl, {"classname": className}, function (data) {
             	maintainHistory(className, onAjaxUpdate(data, className), data);
-            });
+            }));
         });
-        // Possibly render parts of page on load/refresh
+	   	// Toast style messages
+	   	$("input[type=hidden][name=user_message]").each(function() {
+	   		var currentTarget = $(this);
+	   		showAlert(currentTarget.data("alert", currentTarget.data("header"), currentTarget.val()));
+	   		currentTarget.remove();
+	   	});
+	   	// Pagination
+	   	el.find(".pagination").each(function(ndx, paginationContext) {
+	   		paginationContext.className.split("/s+/").forEach(function(className) {
+	   			var totalPagesInput = $("input[name=" + className + "-total-data-pages]").filter(":first");
+	   			if(totalPagesInput.length > 0) {
+	   				var val = totalPagesInput.val();
+	   				var totalPages = (/^\d+$)/.test(val)) ? parseInt(val, 10) : 1;
+	   				if(totalPages > 1) {
+	   					// The following updates the global stateObj
+	   					handlePaginationContext($(paginationContext), className, totalPages, true);
+	   				} else {
+	   					$(paginationContext).empty();
+	   				}
+	   			}
+	   		});
+	   	});
+	   	var paginationControlCount = 0;
+	   	$.each(stateObj, function(className, state) {
+	   		paginationControlCount++;
+	   		state["dataHtml"] = [];
+	   		getNodesToUpdate(className).each(function(ndx, el) {
+	   			state.dataHtml.push(el.innerHtml);
+	   		});
+	   	});
+	   	if(paginationControlCount > 0) {
+	   		history.replaceState(stateObj, null, window.location.toString());
+	   	}
+        // Typeahead
         el.find('input[type="text"][data-provide="typeahead"]').each(function () {
             var self = $(this);
             var params = $.extend(getCommonParams(), self.data());
@@ -129,11 +221,9 @@
                 }
             });
         });
-        
-        $('input[type=hidden][name=user_message]').each(function(){
-            var currentTarget = $(this);
-            showAlert(currentTarget.data('alert'), currentTarget.data('header'), currentTarget.val())
-            currentTarget.remove();
+        // Clear the modal content when hidden - to be populated by server on success only
+        $('.modal').on('hidden.bs.modal', function() {
+        	$(this).empty();
         });
     }
 
@@ -158,16 +248,6 @@
                 	}
                 });
             }
-            var totalPages = getTotalPages(data, className);
-            if (!isNaN(totalPages)) {
-                $(".pagination." + className).each(function (ndx, paginationContext) {
-                    if (totalPages > 1) {
-                        handlePaginationContext($(paginationContext), className, totalPages, false);
-                    } else {
-                        $(paginationContext).empty();
-                    }
-                });
-            }
         }
         return htmlArray;
     }
@@ -177,12 +257,17 @@
         if (data.constructor === Array) {
             dataArray = data;
         } else if (typeof data === 'object') {
-            $.each(data, function (key, val) {
-                if (val.constructor === Array) {
-                    dataArray = val;
-                    return false;
-                }
-            });
+        	if(data && data.status && data.status === 302 && data.location && typeof data.location === 'string') {
+        		// the way to redirect AJAX requests, otherwise not followed by the browser
+        		window.location.replace(data.location);
+        	} else {
+	            $.each(data, function (key, val) {
+	                if (val.constructor === Array) {
+	                    dataArray = val;
+	                    return false;
+	                }
+	            });
+        	}
         }
         return dataArray;
     }
@@ -293,7 +378,7 @@
             if (totalPages < showRange * 2) {
                 content = addPages(1, totalPages, currentPage, totalPages, templates);
             }
-            else if (currentPage < showRange * 2) {
+            else if (currentPage <= showRange * 2) {
                 content = addPages(1, showRange * 2, currentPage, totalPages, templates);
             }
             else if (currentPage > totalPages - showRange * 2) {
@@ -322,7 +407,7 @@
     }
 
     function getContent(type, url, params, callbackDone, callbackFail, callbackAlways) {
-        jQuery.ajax({
+        return jQuery.ajax({
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Accept", "application/json");
             },
@@ -337,13 +422,7 @@
         		callbackFail();
         	}
         })
-        .always(function (/*data|jqXHR, textStatus, jqXHR|errorThrown*/) {
-            // Remove loader
-            $("#loader").remove();
-            if (callbackAlways) {
-                callbackAlways();
-            }
-        });
+        .always(callbackAlways);
     }
 
     function handlePaginationContext(paginationContext, className, totalPages, addEventHandler) {
@@ -355,6 +434,7 @@
             });
         });
         var currentPage = 1,
+        	targetUrl = paginationContext.attr("data-target_url"),
             isSecondary = paginationContext.attr("data-secondary");
 
         var pageParamValue = parseInt(getCommonParams()[className]);
@@ -398,9 +478,9 @@
                 var currentParams = getCommonParams();
                 currentParams[className] = currentPage;
 
-                getContent(
+                addLoader(getContent(
                 	"GET",
-                	undefined,
+                	targetUrl,
                     $.extend({}, currentParams, {
                         "classname": className
                     }),
@@ -416,15 +496,8 @@
                         var newUrl = window.location.href.split("?")[0] + "?" + getRequestBody(currentParams);
                         history.pushState(stateObj, null, newUrl);
                     }
-                );
+                ));
             });
-            
-            paginationContext.on("click", ".addLoader", function (event) {
-                if (!$(this).hasClass('disabled')) {
-                    addLoader();
-                }
-            });
-
         }
 
         addPopstateListener();
@@ -524,26 +597,6 @@
     }
 
     $(document).ready(function ($) {
-        $(".pagination").each(function (ndx, paginationContext) {
-            paginationContext.className.split(/\s+/).forEach(function (className) {
-                var totalPages = parseInt($("input[name='" + className + "-total-data-pages']").filter(":first").val(), 10) || 1;
-                if (!isNaN(totalPages) && totalPages > 1) {
-                    // Note the following updates the global stateObj
-                    handlePaginationContext($(paginationContext), className, totalPages, true);
-                }
-            });
-        });
-        var paginationControlCount = 0;
-        $.each(stateObj, function (className, state) {
-            paginationControlCount++;
-            state["dataHtml"] = [];
-            getNodesToUpdate(className).each(function (ndx, el) {
-                state.dataHtml.push(el.innerHTML);
-            });
-        });
-        if (paginationControlCount > 0) {
-            history.replaceState(stateObj, null, window.location.toString());
-        }
         // Render arbitrary data on page
         init($(this));
     });

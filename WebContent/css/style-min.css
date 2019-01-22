@@ -2,7 +2,7 @@ p{margin:0 0 10px}
 .hidden{display:none!important}
 #loader,.loadcloak{position:absolute;top:0;left:0;width:100%;height:100%;z-index:500003!important;background-color:#fff;opacity:1}
 #loader{opacity:.8!important}
-#loader:before,.loadcloak:before{content:"";position:absolute;left:50%;top:50%;margin:-75px 0 0 -75px;border:16px solid #f0f0f0;border-radius:50%;border-top:16px solid #2e6da4;width:120px;height:120px;z-index:500004!important;opacity:1!important;-webkit-animation:spin 2s linear infinite;animation:spin 2s linear infinite}@-webkit-keyframes spin{0%{-webkit-transform:rotate(0deg)}100%{-webkit-transform:rotate(360deg)}}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+#loader:before,.loadcloak:before{content:"";position:absolute;left:50%;top:50%;margin:-75px 0 0 -75px;border:16px solid #f0f0f0;border-radius:50%;border-top:16px solid #2e6da4;width:120px;height:120px;z-index:500004!important;opacity:1!important;-webkit-animation: spin 2s linear infinite;animation: spin 2s linear infinite}@-webkit-keyframes spin{0%{-webkit-transform:rotate(0deg)}100%{-webkit-transform:rotate(360deg)}}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .pagination{margin:25px 0 25px}
 .pagination{display:inline-block;padding-left:0;border-radius:0}
 .pagination>li{display:inline}
