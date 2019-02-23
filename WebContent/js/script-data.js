@@ -85,13 +85,15 @@
             var fieldData = getCommonParams();
             var form = $(e.currentTarget);
             form.find("input").each(function (ndx, el) {
+                fieldData[el.name] = fieldData[el.name] || [];
             	if((['checkbox','radio'].indexOf(el.type) < 0 || el.checked) && el.name) {
-            		fieldData[el.name] = $(el).val();
+            		fieldData[el.name].push($(el).val());
             	}
             });
             form.find("textarea, select").each(function (ndx, el) {
+                fieldData[el.name] = fieldData[el.name] || [];
             	if((['checkbox','radio'].indexOf(el.type) < 0 || el.checked) && el.name) {
-            		fieldData[el.name] = $(el).val();
+            		fieldData[el.name].push($(el).val());
             	}
             });
             var className = fieldData["classname"];
@@ -153,7 +155,7 @@
 	   			var totalPagesInput = $("input[name=" + className + "-total-data-pages]").filter(":first");
 	   			if(totalPagesInput.length > 0) {
 	   				var val = totalPagesInput.val();
-	   				var totalPages = (/^\d+$)/.test(val)) ? parseInt(val, 10) : 1;
+	   				var totalPages = (/^\d+$/.test(val)) ? parseInt(val, 10) : 1;
 	   				if(totalPages > 1) {
 	   					// The following updates the global stateObj
 	   					handlePaginationContext($(paginationContext), className, totalPages, true);
@@ -413,14 +415,13 @@
             },
             url: url || window.location.href.split("?")[0],
             data: params,
-            type: type || 'GET'
+            type: type || 'GET',
+            traditional: true
         })
         .done(callbackDone)
         .fail(function(jqXHR, textStatus, errorThrown) {
         	showAlert('danger', 'Error', 'AJAX request failed');
-        	if(callbackFail) {
-        		callbackFail();
-        	}
+        	callbackFail && callbackFail();
         })
         .always(callbackAlways);
     }
@@ -437,11 +438,6 @@
         	targetUrl = paginationContext.attr("data-target_url"),
             isSecondary = paginationContext.attr("data-secondary");
 
-        var pageParamValue = parseInt(getCommonParams()[className]);
-        if (pageParamValue && !isNaN(pageParamValue) && pageParamValue > 0) {
-            currentPage = Math.min(pageParamValue, totalPages);
-        }
-
         if (addEventHandler) {
             // on click rebuild pagination
             paginationContext.on("click", "li.page,.prev,.next,.start,.end", function (event) {
@@ -449,29 +445,35 @@
                 // don't reload page on click
                 event.preventDefault();
 
-                var pagesAvailable = stateObj[className].totalPages;
+                var $this = $(this),
+                	pagesAvailable = stateObj[className].totalPages;
 
-                if ($(this).is('li.page')) {
+                currentPage = parseInt($this.siblings('.active').text());
+                if (isNaN(currentPage) || currentPage < 1) {
+    	            currentPage = 1;
+                }
+
+                if ($this.is('li.page')) {
                     currentPage = parseInt($(this).text());
                 }
-                if ($(this).is('.prev')) {
+                if ($this.is('.prev')) {
                     currentPage--;
                     if (currentPage < 1) {
                         currentPage = 1;
                     }
                     ;
                 }
-                if ($(this).is('.next')) {
+                if ($this.is('.next')) {
                     currentPage++;
                     if (currentPage > pagesAvailable) {
                         currentPage = pagesAvailable;
                     }
                     ;
                 }
-                if ($(this).is('.start')) {
+                if ($this.is('.start')) {
                     currentPage = 1;
                 }
-                if ($(this).is('.end')) {
+                if ($this.is('.end')) {
                     currentPage = pagesAvailable;
                 }
 
